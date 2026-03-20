@@ -1,0 +1,35 @@
+# STM32CubeIDE workspace metadata
+.metadata/
+
+# Eclipse/STM32CubeIDE local settings
+.settings/
+
+# Build output directories
+Debug/
+Release/
+
+# Common embedded build artifacts
+*.o
+*.d
+*.su
+*.cyclo
+*.lst
+*.list
+*.map
+*.elf
+*.axf
+*.out
+*.hex
+*.bin
+*.srec
+
+# Launch / Debugger config files
+*.launch
+
+# OS/editor clutter
+*.log
+*.tmp
+*.swp
+*~
+.DS_Store
+Thumbs.db
