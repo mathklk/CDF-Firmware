@@ -23,6 +23,9 @@
 /* USER CODE BEGIN Includes */
 #include <stdint.h>
 #include <stdio.h>
+#include <inttypes.h>
+
+#include "my_stm32wl3x_hal.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -105,8 +108,8 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  printf("Hello World!\r\n");
   printf("%s - %s\r\n", __DATE__, __TIME__);
+  printf("%" PRIX32 "-%" PRIX32 "\r\n", HAL_GET_UID64_M(), HAL_GET_UID64_L());
 
   /* USER CODE END 2 */
 
