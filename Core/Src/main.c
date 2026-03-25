@@ -27,6 +27,7 @@
 #include <stdbool.h>
 
 #include "my_stm32wl3x_hal.h"
+#include "checksum.h"
 #include "banner.h"
 /* USER CODE END Includes */
 
@@ -46,6 +47,12 @@ typedef union {
     uint32_t w;
 } IQ;
 
+#define IQ_BUFFER_SIZE 3500
+typedef struct {
+    IQ buf0[IQ_BUFFER_SIZE];
+    IQ buf1[IQ_BUFFER_SIZE];
+} IqBuffers;
+
 typedef enum {
     idle,
     print
@@ -55,7 +62,7 @@ typedef enum {
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define IQ_BUFFER_SIZE 100 //3500
+
 #define UART_RX_BUFFER_SIZE 16
 /* USER CODE END PD */
 
@@ -73,11 +80,13 @@ RNG_HandleTypeDef hrng;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-__attribute__((aligned(4))) IQ databuffer0[IQ_BUFFER_SIZE];
-__attribute__((aligned(4))) IQ databuffer1[IQ_BUFFER_SIZE];
+__attribute__((aligned(4))) IqBuffers buffers;
+//__attribute__((aligned(4))) IQ databuffer0[IQ_BUFFER_SIZE];
+//__attribute__((aligned(4))) IQ databuffer1[IQ_BUFFER_SIZE];
 // IQ* databuffers[] = {databuffer0, databuffer1};
 
 uint8_t uartRxBuffer[UART_RX_BUFFER_SIZE];
+char command = 0;
 
 State state = idle;
 /* USER CODE END PV */
@@ -138,15 +147,16 @@ int main(void)
   PeriphCommonClock_Config();
 
   /* USER CODE BEGIN SysInit */
+  // Initialize with ordered, debuggable values
   for (uint32_t i = 0; i < IQ_BUFFER_SIZE; ++i) {
-    databuffer0[i].b.b0 = (uint8_t)(i);
-    databuffer0[i].b.b1 = (uint8_t)(i);
-    databuffer0[i].b.b2 = (uint8_t)(i);
-    databuffer0[i].b.b3 = (uint8_t)(i);
-    databuffer1[i].b.b0 = (uint8_t)(i);
-    databuffer1[i].b.b1 = (uint8_t)(i);
-    databuffer1[i].b.b2 = (uint8_t)(i);
-    databuffer1[i].b.b3 = (uint8_t)(i);
+    buffers.buf0[i].b.b0 = (uint8_t)(i);
+    buffers.buf0[i].b.b1 = (uint8_t)(i);
+    buffers.buf0[i].b.b2 = (uint8_t)(i);
+    buffers.buf0[i].b.b3 = (uint8_t)(i);
+    buffers.buf1[i].b.b0 = (uint8_t)(i);
+    buffers.buf1[i].b.b1 = (uint8_t)(i);
+    buffers.buf1[i].b.b2 = (uint8_t)(i);
+    buffers.buf1[i].b.b3 = (uint8_t)(i);
   }
   /* USER CODE END SysInit */
 
@@ -170,16 +180,63 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     if (state == print) {
+      uint32_t const nBytes = sizeof(buffers);
+      if (nBytes > UINT16_MAX) {
+        printf("FRAME TOO LARGE TO REPRESENT AS UINT16\r\n");
+      }
+
+      uint32_t const checksum = crc32((uint8_t*)buffers.buf0, sizeof(buffers));
+
+      // Start of Header
+      putchar(0x01);
+      // Frame Length
+      putchar((nBytes >> 8) & 0xFF);
+      putchar( nBytes       & 0xFF);
+      // Checksum
+      putchar((checksum >> 24) & 0xFF);
+      putchar((checksum >> 16) & 0xFF);
+      putchar((checksum >>  8) & 0xFF);
+      putchar( checksum        & 0xFF);
+
       for (uint32_t i = 0; i < IQ_BUFFER_SIZE; ++i) {
-        putIq(databuffer0[i]);
+        putIq(buffers.buf0[i]);
         HAL_IWDG_Refresh(&hiwdg);
       }
       for (uint32_t i = 0; i < IQ_BUFFER_SIZE; ++i) {
-        putIq(databuffer1[i]);
+        putIq(buffers.buf1[i]);
         HAL_IWDG_Refresh(&hiwdg);
       }
-      printf("\r\nFrame transmitted\r\n");
       state = idle;
+    }
+
+    // Command Interpreter
+    if (command != 0) {
+      if (command == 'u') {
+        printf("%" PRIX32 "-%" PRIX32 "\r\n", HAL_GET_UID64_M(), HAL_GET_UID64_L());
+      }
+      else if (command == 'd') {
+        printf("%s - %s\r\n", __DATE__, __TIME__);
+      }
+      else if (command == 'r') {
+        printf("Resetting...\r\n");
+        NVIC_SystemReset();
+      }
+      else if (command == 'i') {
+        state = idle;
+        printf("state=idle\r\n");
+      }
+      else if (command == 'p') {
+        state = print;
+      }
+      else if (command == 'f') {
+        for (uint32_t i = 0; i < IQ_BUFFER_SIZE; ++i) {
+          HAL_RNG_GenerateRandomNumber(&hrng, &buffers.buf0[i].w);
+          HAL_RNG_GenerateRandomNumber(&hrng, &buffers.buf1[i].w);
+        }
+        printf("Buffers filled randomly %lx\r\n", buffers.buf0[0].w);
+      }
+
+      command = 0;
     }
 
     // Reset Watchdog
@@ -310,13 +367,13 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 2000000;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
   huart1.Init.Mode = UART_MODE_TX_RX;
   huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_8;
   huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
   huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
   huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
@@ -365,33 +422,8 @@ static void MX_GPIO_Init(void)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   BEGIN_UART_RX;
-  char c = uartRxBuffer[0];
-  if (c == 'u') {
-    printf("%" PRIX32 "-%" PRIX32 "\r\n", HAL_GET_UID64_M(), HAL_GET_UID64_L());
-  }
-  else if (c == 'd') {
-    printf("%s - %s\r\n", __DATE__, __TIME__);
-  }
-  else if (c == 'r') {
-    NVIC_SystemReset();
-//    while (1) {
-//      ;; // trigger watchdog to reset
-//    }
-  }
-  else if (c == 'i') {
-    state = idle;
-  }
-  else if (c == 'p') {
-    state = print;
-    uint32_t const nBytes = 4 * IQ_BUFFER_SIZE * 2;
-    if (nBytes > UINT16_MAX) {
-      printf("FRAME TOO LARGE TO REPRESENT AS UINT16\r\n");
-      return;
-    }
-    putchar(0x01); // Start of Heading
-    putchar((nBytes >> 8) & 0xFF);
-    putchar( nBytes       & 0xFF);
-  }
+  command = uartRxBuffer[0];
+
 
   //  char sanitizedBuffer[UART_RX_BUFFER_SIZE + 1];
   //  for (size_t i = 0; i < UART_RX_BUFFER_SIZE; i++) {
