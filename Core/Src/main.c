@@ -29,6 +29,7 @@
 #include "my_stm32wl3x_hal.h"
 #include "checksum.h"
 #include "banner.h"
+#include "BSP_CDF_V1.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -166,6 +167,8 @@ int main(void)
   MX_IWDG_Init();
   MX_RNG_Init();
   /* USER CODE BEGIN 2 */
+  BSP_RF_ENABLE_ARRAY();
+
   printf("\r\n\r\n");
   printf(BANNER);
   printf("\r\n@ %s - %s\r\n", __DATE__, __TIME__);
@@ -211,22 +214,16 @@ int main(void)
 
     // Command Interpreter
     if (command != 0) {
-      if (command == 'u') {
-        printf("%" PRIX32 "-%" PRIX32 "\r\n", HAL_GET_UID64_M(), HAL_GET_UID64_L());
+      if (command == 'a') {
+        BSP_RF_ENABLE_ARRAY();
+        printf("RF path set to array\r\n");
+      }
+      else if (command == 'b') {
+        BSP_RF_ENABLE_MASTER();
+        printf("RF path set to master\r\n");
       }
       else if (command == 'd') {
         printf("%s - %s\r\n", __DATE__, __TIME__);
-      }
-      else if (command == 'r') {
-        printf("Resetting...\r\n");
-        NVIC_SystemReset();
-      }
-      else if (command == 'i') {
-        state = idle;
-        printf("state=idle\r\n");
-      }
-      else if (command == 'p') {
-        state = print;
       }
       else if (command == 'f') {
         for (uint32_t i = 0; i < IQ_BUFFER_SIZE; ++i) {
@@ -235,6 +232,22 @@ int main(void)
         }
         printf("Buffers filled randomly %lx\r\n", buffers.buf0[0].w);
       }
+      else if (command == 'i') {
+        state = idle;
+        printf("state=idle\r\n");
+      }
+      else if (command == 'p') {
+        state = print;
+      }
+      else if (command == 'r') {
+        printf("Resetting...\r\n");
+        NVIC_SystemReset();
+      }
+      else if (command == 'u') {
+        printf("%" PRIX32 "-%" PRIX32 "\r\n", HAL_GET_UID64_M(), HAL_GET_UID64_L());
+      }
+
+
 
       command = 0;
     }
@@ -406,12 +419,29 @@ static void MX_USART1_UART_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
   /* USER CODE BEGIN MX_GPIO_Init_1 */
 
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : PA14 PA15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_14|GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /**/
+  HAL_PWREx_DisableGPIOPullUp(PWR_GPIO_A, PWR_GPIO_BIT_14|PWR_GPIO_BIT_15);
+
+  /**/
+  HAL_PWREx_DisableGPIOPullDown(PWR_GPIO_A, PWR_GPIO_BIT_14|PWR_GPIO_BIT_15);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
