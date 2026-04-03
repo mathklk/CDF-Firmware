@@ -78,6 +78,67 @@ void HAL_MspInit(void)
 }
 
 /**
+  * @brief MRSubG MSP Initialization
+  * This function configures the hardware resources used in this example
+  * @param hmrsubg: MRSubG handle pointer
+  * @retval None
+  */
+void HAL_MRSubG_MspInit(void)
+{
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+    /* USER CODE BEGIN MRSubG_MspInit 0 */
+
+    /* USER CODE END MRSubG_MspInit 0 */
+
+  /** Initializes the peripherals clock
+  */
+    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC_WDG_SUBG_LPAWUR_LCD_LCSC;
+    PeriphClkInitStruct.RTCWDGSUBGLPAWURLCDLCSCClockSelection = RCC_RTC_WDG_SUBG_LPAWUR_LCD_LCSC_CLKSOURCE_LSI;
+    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    /* Peripheral clock enable */
+    if (__HAL_RCC_MRSUBG_IS_CLK_DISABLED())
+    {
+      /* MRSUBG Peripheral reset */
+      __HAL_RCC_MRSUBG_FORCE_RESET();
+      __HAL_RCC_MRSUBG_RELEASE_RESET();
+
+      /* Enable MRSUBG peripheral clock */
+      __HAL_RCC_MRSUBG_CLK_ENABLE();
+    }
+
+    /* USER CODE BEGIN MRSubG_MspInit 1 */
+
+    /* USER CODE END MRSubG_MspInit 1 */
+
+}
+
+/**
+  * @brief MRSubG MSP De-Initialization
+  * This function freeze the hardware resources used in this example
+  * @param hmrsubg: MRSubG handle pointer
+  * @retval None
+  */
+void HAL_MRSubG_MspDeInit(void)
+{
+    /* USER CODE BEGIN MRSubG_MspDeInit 0 */
+
+    /* USER CODE END MRSubG_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_MRSUBG_CLK_DISABLE();
+    __HAL_RCC_MRSUBG_FORCE_RESET();
+    __HAL_RCC_MRSUBG_RELEASE_RESET();
+
+    /* USER CODE BEGIN MRSubG_MspDeInit 1 */
+
+    /* USER CODE END MRSubG_MspDeInit 1 */
+
+}
+
+/**
   * @brief RNG MSP Initialization
   * This function configures the hardware resources used in this example
   * @param hrng: RNG handle pointer
@@ -118,6 +179,72 @@ void HAL_RNG_MspDeInit(RNG_HandleTypeDef* hrng)
     /* USER CODE BEGIN RNG_MspDeInit 1 */
 
     /* USER CODE END RNG_MspDeInit 1 */
+  }
+
+}
+
+/**
+  * @brief TIM_Base MSP Initialization
+  * This function configures the hardware resources used in this example
+  * @param htim_base: TIM_Base handle pointer
+  * @retval None
+  */
+void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
+{
+  if(htim_base->Instance==TIM2)
+  {
+    /* USER CODE BEGIN TIM2_MspInit 0 */
+
+    /* USER CODE END TIM2_MspInit 0 */
+    /* Peripheral clock enable */
+    __HAL_RCC_TIM2_CLK_ENABLE();
+    /* USER CODE BEGIN TIM2_MspInit 1 */
+
+    /* USER CODE END TIM2_MspInit 1 */
+  }
+  else if(htim_base->Instance==TIM16)
+  {
+    /* USER CODE BEGIN TIM16_MspInit 0 */
+
+    /* USER CODE END TIM16_MspInit 0 */
+    /* Peripheral clock enable */
+    __HAL_RCC_TIM16_CLK_ENABLE();
+    /* USER CODE BEGIN TIM16_MspInit 1 */
+
+    /* USER CODE END TIM16_MspInit 1 */
+  }
+
+}
+
+/**
+  * @brief TIM_Base MSP De-Initialization
+  * This function freeze the hardware resources used in this example
+  * @param htim_base: TIM_Base handle pointer
+  * @retval None
+  */
+void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base)
+{
+  if(htim_base->Instance==TIM2)
+  {
+    /* USER CODE BEGIN TIM2_MspDeInit 0 */
+
+    /* USER CODE END TIM2_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_TIM2_CLK_DISABLE();
+    /* USER CODE BEGIN TIM2_MspDeInit 1 */
+
+    /* USER CODE END TIM2_MspDeInit 1 */
+  }
+  else if(htim_base->Instance==TIM16)
+  {
+    /* USER CODE BEGIN TIM16_MspDeInit 0 */
+
+    /* USER CODE END TIM16_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_TIM16_CLK_DISABLE();
+    /* USER CODE BEGIN TIM16_MspDeInit 1 */
+
+    /* USER CODE END TIM16_MspDeInit 1 */
   }
 
 }

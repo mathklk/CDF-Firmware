@@ -29,6 +29,15 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32wl3x_hal.h"
 
+#include "stm32wl3x_ll_bus.h"
+#include "stm32wl3x_ll_cortex.h"
+#include "stm32wl3x_ll_rcc.h"
+#include "stm32wl3x_ll_system.h"
+#include "stm32wl3x_ll_utils.h"
+#include "stm32wl3x_ll_gpio.h"
+#include "stm32wl3x_ll_pwr.h"
+#include "stm32wl3x_ll_dma.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -53,10 +62,14 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+void startNormalRx();
+void startIqRx();
+void startTx();
+void waitForTxDone();
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define PAYLOAD_LENGTH 0
 
 /* USER CODE BEGIN Private defines */
 

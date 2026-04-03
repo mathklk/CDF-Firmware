@@ -6,11 +6,13 @@
 "  \\____|____/|_|     |_(_)___/ \r\n" \
 "\r\n" \
 "Command Overview:\r\n" \
-"a : Switch RF path to array (direct to antennas)\r\n" \
-"b : Switch RF path to master\r\n" \
+"a : Switch RF path to antennas\r\n" \
+"b : Switch RF path to common onboard connection\r\n" \
+"c : Toggle cycling\r\n" \
 "d : Print build date and time\r\n" \
-"f : Fill buffers with random data\r\n" \
-"i : Set state to idle\r\n" \
+"m : Print message structure\r\n" \
 "p : Print buffers to console\r\n" \
-"r : Reset the system\r\n" \
-"u : Print device UID\r\n"
+"r : Perform reset\r\n" \
+"t : Transmit a sample message\r\n" \
+"u : Print device UID\r\n" \
+"x : Receive a frame\r\n"

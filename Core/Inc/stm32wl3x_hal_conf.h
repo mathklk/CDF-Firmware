@@ -47,7 +47,7 @@ extern "C" {
 /*#define HAL_SMARTCARD_MODULE_ENABLED   */
 /*#define HAL_SMBUS_MODULE_ENABLED   */
 /*#define HAL_SPI_MODULE_ENABLED   */
-/*#define HAL_TIM_MODULE_ENABLED   */
+#define HAL_TIM_MODULE_ENABLED
 #define HAL_UART_MODULE_ENABLED
 /*#define HAL_USART_MODULE_ENABLED   */
 /*#define HAL_WWDG_MODULE_ENABLED   */
@@ -55,7 +55,7 @@ extern "C" {
 /*#define HAL_LCD_MODULE_ENABLED   */
 /*#define HAL_LCSC_MODULE_ENABLED   */
 /*#define HAL_LPAWUR_MODULE_ENABLED   */
-/*#define HAL_MRSUBG_MODULE_ENABLED   */
+#define HAL_MRSUBG_MODULE_ENABLED
 /*#define HAL_MRSUBG_TIMER_MODULE_ENABLED   */
 /*#define HAL_DAC_MODULE_ENABLED   */
 
