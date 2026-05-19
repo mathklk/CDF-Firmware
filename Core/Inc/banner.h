@@ -15,4 +15,6 @@
 "r : Perform reset\r\n" \
 "t : Transmit a sample message\r\n" \
 "u : Print device UID\r\n" \
+"v : Switch to pre-cut frames (default)\r\n" \
+"w : Switch to full frames\r\n" \
 "x : Receive a frame\r\n"
