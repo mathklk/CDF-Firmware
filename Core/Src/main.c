@@ -228,6 +228,10 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   State state = IDLE;
+  bool fullFrames = false;
+  uint16_t const shortFrameWidth = 500;
+  uint16_t const shortFrameCaliStart = 130;
+  uint16_t const shortFramePongStart = 5200;
   uint16_t pingTimestampMs = 0;
   while (1) {
     /* USER CODE END WHILE */
@@ -316,6 +320,14 @@ int main(void)
       else if (command is 'u') {
         printf("%" PRIX32 "-%" PRIX32 " %s"rn, HAL_GET_UID64_M(), HAL_GET_UID64_L(), iAmMaster ? "(MASTER)" : "");
       }
+      else if (command is 'v') {
+        fullFrames = false;
+        printf("Enabled short frame mode %" PRIu16 ":%" PRIu16 ", %" PRIu16 ":%" PRIu16 rn, shortFrameCaliStart, shortFrameWidth, shortFramePongStart, shortFrameWidth);
+      }
+      else if (command is 'w') {
+        fullFrames = true;
+        printf("Enabled full frame mode"rn);
+      }
       else if (command is 'x') {
         if (iAmMaster) {
           if (state is IDLE) {
@@ -327,7 +339,7 @@ int main(void)
             // Kalibrier-Nachricht senden
             BSP_SWITCH_RF_PATH_COMMON();
             LL_MRSubG_SetSecondarySync(true);
-            LL_MRSubG_SetSecondarySyncWord(0x00000000);
+            LL_MRSubG_SetSecondarySyncWord(0xFFFFFFFF);
             startTx();
             waitForTxDone();
             printf("Calibration sent"rn);
@@ -341,7 +353,7 @@ int main(void)
             printf("Ping sent"rn);
             // Als master jetzt selbst auf normalen empfang schalten
             LL_MRSubG_SetSecondarySync(true);
-            LL_MRSubG_SetSecondarySyncWord(0xEEEEEEEE);
+            LL_MRSubG_SetSecondarySyncWord(0xFFFFFFFF);
             startNormalRx();
             state = RECEIVING_NORMAL;
             printf("Normal RX started on master after routine"rn);
@@ -356,12 +368,16 @@ int main(void)
 
     if (extiTriggered) {
       extiTriggered = false;
-      if (not iAmMaster) {
-        printf("Slave started IQ RX on EXTI"rn);
-        startIqRx();
-        state = RECEIVING_IQ;
+      if (state is IDLE) {
+        if (not iAmMaster) {
+          printf("Slave started IQ RX on EXTI"rn);
+          startIqRx();
+          state = RECEIVING_IQ;
+        } else {
+          printf("EXTI on master!?!?!? ignored."rn);
+        }
       } else {
-        printf("EXTI on master!?!?!? ignored."rn);
+        printf("EXTI ignored while not in IDLE."rn);
       }
     }
 
@@ -406,9 +422,9 @@ int main(void)
       state = IDLE;
     }
     if (state is RECEIVING_NORMAL and
-      __HAL_MRSUBG_GET_RFSEQ_IRQ_STATUS() & MR_SUBG_GLOB_STATUS_RFSEQ_IRQ_STATUS_RX_OK_F
+      __HAL_MRSUBG_GET_RFSEQ_IRQ_STATUS() & MR_SUBG_GLOB_STATUS_RFSEQ_IRQ_STATUS_SYNC_VALID_F
     ) {
-      __HAL_MRSUBG_CLEAR_RFSEQ_IRQ_FLAG(MR_SUBG_GLOB_STATUS_RFSEQ_IRQ_STATUS_RX_OK_F);
+      __HAL_MRSUBG_CLEAR_RFSEQ_IRQ_FLAG(MR_SUBG_GLOB_STATUS_RFSEQ_IRQ_STATUS_SYNC_VALID_F);
       uint16_t const rssiOnSync = LL_MRSubG_GetRssiLevelOnSync();
       uint32_t const roundTripTime = getMs()-pingTimestampMs;
       printf("Pong! after %"PRIu32" ms | rssi=%"PRIu16""rn, roundTripTime, rssiOnSync);
